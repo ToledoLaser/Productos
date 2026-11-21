@@ -59,6 +59,17 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #9bc59b;border-ra
 .adm .two{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
 .adm .chk{display:flex;gap:8px;align-items:center}.adm .chk input{width:auto}
 .btn.sm{padding:6px 10px;font-size:.8rem;margin-right:6px}
+.eo{display:none!important}.edit .eo{display:inline-block!important}
+.edit #adm{display:none!important}
+.edit [data-e]{outline:2px dashed var(--g3);outline-offset:3px;cursor:text}
+.ec{display:inline-flex;gap:6px;margin-left:8px}.ec>span{padding:0 6px;border-radius:5px;background:#0002;cursor:pointer}
+.pc{position:absolute;top:6px;right:6px;z-index:2;background:#fff;padding:3px;border-radius:8px;box-shadow:0 1px 4px #0004;margin:0}
+.card{position:relative}
+.addp{align-items:center;justify-content:center;min-height:150px;font-weight:700;color:var(--g1);border:2px dashed var(--g2)}
+#ebar{display:none;position:fixed;bottom:0;left:0;right:0;background:#10200f;color:#fff;padding:10px 5vw;gap:8px;flex-wrap:wrap;align-items:center;z-index:15}
+.edit #ebar{display:flex}body.edit{padding-bottom:70px}
+.logoimg{height:38px;max-width:180px;object-fit:contain}
+.hero{background-size:cover;background-position:center}
 </style>
 </head>
 <body>
@@ -82,20 +93,22 @@ input,select,textarea{width:100%;padding:10px;border:1px solid #9bc59b;border-ra
 -->
 <header>
   <div class="logo"><svg width="30" height="30" viewBox="0 0 30 30" fill="#fff" aria-hidden="true"><rect x="3" y="3" width="24" height="6"/><path d="M12 9h6v12l-3 4-3-4z"/><rect x="5" y="27" width="20" height="2"/></svg><span>TOLEDO<small>LÁSER</small></span></div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="cartbtn" id="adm" style="display:none">Editar tienda</button><button class="cartbtn" id="login">Ingresar con Google</button><button class="cartbtn" id="openCart">Carrito (<span id="cc">0</span>)</button></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="cartbtn" id="adm" style="display:none">Editar la página</button><button class="cartbtn" id="login">Ingresar con Google</button><button class="cartbtn" id="openCart">Carrito (<span id="cc">0</span>)</button></div>
 </header>
 <section class="hero">
-  <h1 id="hTitle"></h1>
-  <p id="hText"></p>
+  <h1 id="hTitle" data-e="hero.titulo"></h1>
+  <p id="hText" data-e="hero.texto"></p>
   <a class="btn" href="#catalogo">Ver catálogo</a>
+  <p class="eo" style="margin-top:16px"><button class="btn sm" data-act="logo">📷 Cambiar logo</button><button class="btn sm" data-act="logo0">Logo original</button><button class="btn sm" data-act="herobg">📷 Imagen de fondo</button><button class="btn sm" data-act="herobg0">Quitar fondo</button></p>
 </section>
 <main id="catalogo">
   <div class="chips" id="chips" role="tablist"></div>
   <div class="grid" id="grid"></div>
   <div class="info" id="info"></div>
 </main>
-<footer id="foot"></footer>
+<footer id="foot" data-e="pie"></footer>
 
+<div id="ebar"><strong>Modo edición</strong><button class="btn sm" id="esave">Guardar cambios</button><button class="btn sm" id="eset">Ajustes</button><button class="btn sm" id="ecan">Salir</button></div>
 <div class="ov" id="pov"><div class="sheet" id="psheet"></div></div>
 <div class="ov" id="cov"><div class="sheet" id="csheet"></div></div>
 <div class="ov" id="aov"><div class="sheet adm" id="asheet" style="width:min(760px,100%)"></div></div>
@@ -155,28 +168,36 @@ const FB_ON = !!FIREBASE.apiKey && !FIREBASE.apiKey.startsWith("PEGAR");
 
 const C = CONFIG, $ = s => document.querySelector(s);
 const money = n => C.moneda + Number(n).toLocaleString('es-AR');
-let cart = [], cat = "Todas", USER = null;
+let cart = [], cat = "Todas", USER = null, EDIT = false, IMG = {};
+const src = u => u && u.startsWith("fb:") ? (IMG[u.slice(3)] || "") : (u || "");
 try { cart = JSON.parse(localStorage.getItem('tl_cart') || '[]') } catch (e) {}
 const save = () => { try { localStorage.setItem('tl_cart', JSON.stringify(cart)) } catch (e) {} };
 const prod = id => C.productos.find(p => p.id === id);
 const unit = (p, q) => (p.mayorista && q >= p.mayorista.desde) ? p.mayorista.precio : p.precio;
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const img = p => `<div class="ph">${p.img ? `<img src="${esc(p.img)}" alt="${esc(p.nombre)}" loading="lazy">` : esc(p.emoji || '🪵')}</div>`;
+const img = p => { const s = src(p.img); return `<div class="ph">${s ? `<img src="${esc(s)}" alt="${esc(p.nombre)}" loading="lazy">` : esc(p.emoji || '🪵')}</div>` };
 
+const LOGO0 = $('.logo').innerHTML;
 function paintText() {
   document.title = C.negocio;
+  const lg = src(C.logo); $('.logo').innerHTML = lg ? `<img class="logoimg" src="${esc(lg)}" alt="${esc(C.negocio)}">` : LOGO0;
+  const hb = src(C.hero.img); $('.hero').style.backgroundImage = hb ? `linear-gradient(#006400d9,#006400d9),url("${hb}")` : '';
   $('#hTitle').textContent = C.hero.titulo;
   $('#hText').textContent = C.hero.texto;
   $('#foot').textContent = C.pie;
-  $('#info').innerHTML = C.info.map(i => `<div><h3>${esc(i.titulo)}</h3><p>${esc(i.texto)}</p></div>`).join('');
+  $('#info').innerHTML = C.info.map((i, k) => `<div><h3 data-e="info.${k}.titulo">${esc(i.titulo)}</h3><p data-e="info.${k}.texto">${esc(i.texto)}</p></div>`).join('');
+  window.applyEdit && applyEdit();
 }
 
 function renderCatalog() {
-  $('#chips').innerHTML = ["Todas", ...C.categorias].map(c => `<button class="chip ${c === cat ? 'on' : ''}" data-c="${esc(c)}">${esc(c)}</button>`).join('');
-  document.querySelectorAll('.chip').forEach(b => b.onclick = () => { cat = b.dataset.c; renderCatalog() });
-  const list = C.productos.filter(p => p.visible !== false && (cat === "Todas" || p.categoria === cat));
-  $('#grid').innerHTML = list.length ? list.map(p => `<button class="card ${p.agotado ? 'sold' : ''}" data-id="${p.id}">${img(p)}<div class="t"><h3>${esc(p.nombre)}</h3><div class="price">${money(p.precio)}</div>${p.mayorista ? `<span class="tag">Mayorista desde ${p.mayorista.desde} u.</span>` : ''}${p.agotado ? '<span class="tag">Sin stock</span>' : ''}</div></button>`).join('') : '<p>Todavía no hay productos en esta categoría.</p>';
-  document.querySelectorAll('.card').forEach(b => b.onclick = () => openProd(b.dataset.id));
+  const ctl = i => EDIT ? `<span class="ec"><span role="button" data-act="catL" data-i="${i}">‹</span><span role="button" data-act="catE" data-i="${i}">✎</span><span role="button" data-act="catD" data-i="${i}">×</span><span role="button" data-act="catR" data-i="${i}">›</span></span>` : '';
+  $('#chips').innerHTML = ["Todas", ...C.categorias].map((c, k) => `<button class="chip ${c === cat ? 'on' : ''}" data-c="${esc(c)}">${esc(c)}${k ? ctl(k - 1) : ''}</button>`).join('') + (EDIT ? '<button class="chip" data-act="catA">+ Categoría</button>' : '');
+  document.querySelectorAll('.chip[data-c]').forEach(b => b.onclick = () => { cat = b.dataset.c; renderCatalog() });
+  const list = C.productos.filter(p => (EDIT || p.visible !== false) && (cat === "Todas" || p.categoria === cat));
+  const card = p => `<button class="card ${p.agotado || p.visible === false ? 'sold' : ''}" data-id="${p.id}">${EDIT ? `<span class="ec pc"><span role="button" data-act="pU" data-id="${p.id}">↑</span><span role="button" data-act="pD" data-id="${p.id}">↓</span><span role="button" data-act="pX" data-id="${p.id}">🗑</span></span>` : ''}${img(p)}<div class="t"><h3>${esc(p.nombre)}</h3><div class="price">${money(p.precio)}</div>${p.mayorista && p.mayorista.desde ? `<span class="tag">Mayorista desde ${p.mayorista.desde} u.</span>` : ''}${p.agotado ? '<span class="tag">Sin stock</span>' : ''}${p.visible === false ? '<span class="tag">Oculto</span>' : ''}</div></button>`;
+  $('#grid').innerHTML = (list.length ? list.map(card).join('') : '<p>Todavía no hay productos en esta categoría.</p>') + (EDIT ? '<button class="card addp" data-act="pA">+ Agregar producto</button>' : '');
+  document.querySelectorAll('.card[data-id]').forEach(b => b.onclick = () => EDIT ? window.editProd(b.dataset.id) : openProd(b.dataset.id));
+  window.applyEdit && applyEdit();
 }
 
 function openProd(id) {
@@ -257,62 +278,109 @@ else {
     if ($('#cov').classList.contains('show')) openCart();
   });
   $('#login').onclick = () => USER ? signOut(auth) : signInWithPopup(auth, new GoogleAuthProvider()).catch(e => alert('No se pudo ingresar: ' + e.code));
-  try { const s = await getDoc(ref); if (s.exists()) { Object.assign(C, JSON.parse(s.data().json)); paintText(); renderCatalog(); } } catch (e) { console.warn(e); }
+  try {
+    const s = await getDoc(ref);
+    if (s.exists()) { Object.assign(C, JSON.parse(s.data().json)); paintText(); renderCatalog(); }
+    const ids = [C.logo, C.hero.img, ...C.productos.map(p => p.img)].filter(x => x && x.startsWith('fb:')).map(x => x.slice(3));
+    await Promise.all([...new Set(ids)].map(async id => { try { const d = await getDoc(doc(db, 'imagenes', id)); if (d.exists()) IMG[id] = d.data().d; } catch (e) {} }));
+    paintText(); renderCatalog();
+  } catch (e) { console.warn(e); }
 
-  /* ---------- Panel de administración ---------- */
-  const S = $('#asheet'); let D;
+  /* ---------- Edición directamente sobre la página ---------- */
+  const S = $('#asheet'), P = () => C.productos, idx = id => P().findIndex(p => p.id === id);
   const get = (o, p) => p.split('.').reduce((a, k) => a == null ? a : a[k], o);
   const set = (o, p, v) => { const k = p.split('.'), l = k.pop(); k.reduce((a, x) => a[x] ?? (a[x] = {}), o)[l] = v; };
+  const clean = p => { if (!p.mayorista || !p.mayorista.desde || !p.mayorista.precio) delete p.mayorista; if (p.visible === true) delete p.visible; };
+  window.applyEdit = () => {
+    document.body.classList.toggle('edit', EDIT);
+    document.querySelectorAll('[data-e]').forEach(el => { try { el.contentEditable = EDIT ? 'plaintext-only' : 'false'; } catch (x) { el.contentEditable = EDIT ? 'true' : 'false'; } });
+  };
+  document.addEventListener('input', e => { const el = EDIT && e.target.closest && e.target.closest('[data-e]'); if (el) set(C, el.dataset.e, el.innerText.trim()); });
+
+  const pick = (png, max) => new Promise(res => {
+    const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*';
+    i.onchange = async () => {
+      const f = i.files[0]; if (!f) return res(null);
+      try {
+        const b = await createImageBitmap(f), s = Math.min(1, max / Math.max(b.width, b.height)), c = document.createElement('canvas');
+        c.width = Math.round(b.width * s); c.height = Math.round(b.height * s); c.getContext('2d').drawImage(b, 0, 0, c.width, c.height);
+        let q = .8, d; do { d = png ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', q); q -= .15; } while (!png && d.length > 700000 && q > .2);
+        if (d.length > 900000) throw 0;
+        const id = 'i' + Date.now(); await setDoc(doc(db, 'imagenes', id), { d }); IMG[id] = d; res('fb:' + id);
+      } catch (e) { alert('No se pudo subir la imagen. Probá con una más chica.'); res(null); }
+    };
+    i.click();
+  });
+
+  const act = async (a, i, id) => {
+    const K = C.categorias, L = P();
+    if (a === 'logo') { const r = await pick(true, 400); if (r) C.logo = r; }
+    else if (a === 'logo0') delete C.logo;
+    else if (a === 'herobg') { const r = await pick(false, 1400); if (r) C.hero.img = r; }
+    else if (a === 'herobg0') delete C.hero.img;
+    else if (a === 'catA') { const n = (prompt('Nombre de la nueva categoría') || '').trim(); if (n && !K.includes(n)) { K.push(n); cat = n; } }
+    else if (a === 'catE') { const o = K[i], n = (prompt('Nuevo nombre de la categoría', o) || '').trim(); if (n && n !== o) { K[i] = n; L.forEach(p => { if (p.categoria === o) p.categoria = n; }); if (cat === o) cat = n; } }
+    else if (a === 'catD') { if (confirm('¿Eliminar la categoría "' + K[i] + '"? Los productos no se borran.')) { if (cat === K[i]) cat = 'Todas'; K.splice(i, 1); } }
+    else if (a === 'catL' || a === 'catR') { const j = a === 'catL' ? i - 1 : i + 1; if (j >= 0 && j < K.length) [K[i], K[j]] = [K[j], K[i]]; }
+    else if (a === 'pA') { const p = { id: 'p' + Date.now(), nombre: 'Nuevo producto', categoria: cat !== 'Todas' ? cat : (K[0] || ''), precio: 0, emoji: '🪵', img: '', descripcion: '', opciones: [], personalizable: false }; L.push(p); renderCatalog(); return editProd(p.id); }
+    else if (a === 'pX') { if (!confirm('¿Eliminar este producto?')) return; L.splice(idx(id), 1); }
+    else if (a === 'pU' || a === 'pD') {
+      const ix = L.map((p, k) => k).filter(k => cat === 'Todas' || L[k].categoria === cat), pos = ix.indexOf(idx(id)), q = ix[pos + (a === 'pU' ? -1 : 1)];
+      if (q === undefined) return; const k = ix[pos]; [L[k], L[q]] = [L[q], L[k]];
+    }
+    paintText(); renderCatalog();
+  };
+  document.addEventListener('click', e => { const a = EDIT && e.target.closest('[data-act]'); if (!a) return; e.stopPropagation(); e.preventDefault(); act(a.dataset.act, +a.dataset.i, a.dataset.id); }, true);
+
   const F = (l, p, t = 'text') => {
-    let v = get(D, p);
+    let v = get(C, p);
     if (t === 'chk') { if (p.endsWith('.visible')) v = v !== false; return `<label class="chk"><input type="checkbox" data-p="${p}" data-t="chk" ${v ? 'checked' : ''}>${l}</label>`; }
     if (t === 'csv') v = (v || []).join(', ');
-    if (t === 'lines') v = (v || []).join('\n');
     if (t === 'zonas') v = (v || []).map(z => z.nombre + '|' + z.costo).join('\n');
-    const ta = t === 'area' || t === 'lines' || t === 'zonas';
+    const ta = t === 'area' || t === 'zonas';
     return `<label>${l}</label>` + (ta ? `<textarea rows="${t === 'area' ? 2 : 4}" data-p="${p}" data-t="${t}">${esc(v)}</textarea>` : `<input ${t === 'num' ? 'type="number"' : ''} data-p="${p}" data-t="${t}" value="${esc(v)}">`);
-  };
-  const draw = () => {
-    S.innerHTML = `<button class="x" id="ax" aria-label="Cerrar">×</button><h2>Editar tienda</h2>
-    <h3>Textos generales</h3>${F('Nombre del negocio', 'negocio')}${F('WhatsApp (con código de país, sin +)', 'whatsapp')}${F('Título principal', 'hero.titulo')}${F('Texto principal', 'hero.texto', 'area')}${F('Pie de página', 'pie')}
-    <h3 style="margin-top:18px">Categorías (una por línea; el orden es el de la página)</h3>${F('', 'categorias', 'lines')}
-    <h3 style="margin-top:18px">Envío</h3>${F('Texto de retiro en el taller', 'envio.retiro')}${F('Zonas, una por línea: Nombre|Costo', 'envio.zonas', 'zonas')}${F('Envío gratis desde (0 = nunca)', 'envio.envioGratisDesde', 'num')}
-    <h3 style="margin-top:18px">Productos</h3>` + D.productos.map((p, i) => `<details><summary>${esc(p.emoji || '')} ${esc(p.nombre || 'Producto')}</summary>
-    <div class="two">${F('Nombre', `productos.${i}.nombre`)}${F('Precio', `productos.${i}.precio`, 'num')}</div>
-    <label>Categoría</label><select data-p="productos.${i}.categoria" data-t="text">${D.categorias.map(c => `<option ${c === p.categoria ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
-    ${F('Descripción', `productos.${i}.descripcion`, 'area')}
-    <div class="two">${F('Emoji (si no hay foto)', `productos.${i}.emoji`)}${F('Foto (link o ruta, ej: fotos/mate.jpg)', `productos.${i}.img`)}</div>
-    ${F('Opciones separadas por coma', `productos.${i}.opciones`, 'csv')}
-    <div class="two">${F('Mayorista desde (unidades)', `productos.${i}.mayorista.desde`, 'num')}${F('Precio mayorista c/u', `productos.${i}.mayorista.precio`, 'num')}</div>
-    ${F('Permite texto a grabar', `productos.${i}.personalizable`, 'chk')}${F('Sin stock', `productos.${i}.agotado`, 'chk')}${F('Visible en la tienda', `productos.${i}.visible`, 'chk')}
-    <p style="margin-top:10px"><button class="btn sm" data-a="up" data-i="${i}">Subir</button><button class="btn sm" data-a="dn" data-i="${i}">Bajar</button><button class="btn sm" data-a="del" data-i="${i}">Eliminar</button></p></details>`).join('') + `
-    <p style="margin-top:12px"><button class="btn sm" data-a="add">+ Agregar producto</button></p><p class="err" id="aer"></p><button class="btn dark" id="asave" style="width:100%;margin-top:10px">Guardar cambios</button>`;
   };
   S.onchange = e => {
     const el = e.target, p = el.dataset.p, t = el.dataset.t; if (!p) return; let v = el.value;
     if (t === 'chk') v = el.checked;
     else if (t === 'num') v = v === '' ? '' : +v;
     else if (t === 'csv') v = v.split(',').map(s => s.trim()).filter(Boolean);
-    else if (t === 'lines') v = v.split('\n').map(s => s.trim()).filter(Boolean);
     else if (t === 'zonas') v = v.split('\n').map(l => l.split('|')).filter(a => a[0].trim()).map(a => ({ nombre: a[0].trim(), costo: +a[1] || 0 }));
-    set(D, p, v);
+    set(C, p, v);
+  };
+  window.editProd = id => {
+    const i = idx(id), p = P()[i], s = src(p.img), k = `productos.${i}.`;
+    S.dataset.id = id;
+    S.innerHTML = `<button class="x" id="ax" aria-label="Cerrar">×</button><h2>Editar producto</h2>
+    <div class="ph" style="max-width:200px;margin-top:10px">${s ? `<img src="${esc(s)}" alt="">` : esc(p.emoji || '🪵')}</div>
+    <p style="margin:8px 0"><button class="btn sm" data-a="foto">📷 ${s ? 'Cambiar foto' : 'Subir foto'}</button>${s ? '<button class="btn sm" data-a="foto0">Quitar foto</button>' : ''}</p>
+    <div class="two">${F('Nombre', k + 'nombre')}${F('Precio', k + 'precio', 'num')}</div>
+    <label>Categoría</label><select data-p="${k}categoria" data-t="text">${C.categorias.map(c => `<option ${c === p.categoria ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
+    ${F('Descripción', k + 'descripcion', 'area')}${F('Emoji (si no hay foto)', k + 'emoji')}${F('Opciones separadas por coma (ej: Chico, Grande)', k + 'opciones', 'csv')}
+    <div class="two">${F('Mayorista desde (unidades)', k + 'mayorista.desde', 'num')}${F('Precio mayorista c/u', k + 'mayorista.precio', 'num')}</div>
+    ${F('Permite texto a grabar', k + 'personalizable', 'chk')}${F('Sin stock', k + 'agotado', 'chk')}${F('Visible en la tienda', k + 'visible', 'chk')}
+    <button class="btn dark" id="aok" style="width:100%;margin-top:14px">Listo</button>`;
+    $('#aov').classList.add('show');
+  };
+  const ajustes = () => {
+    S.dataset.id = '';
+    S.innerHTML = `<button class="x" id="ax" aria-label="Cerrar">×</button><h2>Ajustes</h2>${F('WhatsApp (con código de país, sin +)', 'whatsapp')}${F('Texto de retiro en el taller', 'envio.retiro')}${F('Zonas de envío, una por línea: Nombre|Costo', 'envio.zonas', 'zonas')}${F('Envío gratis desde (0 = nunca)', 'envio.envioGratisDesde', 'num')}<button class="btn dark" id="aok" style="width:100%;margin-top:14px">Listo</button>`;
+    $('#aov').classList.add('show');
   };
   S.onclick = async e => {
-    if (e.target.id === 'ax') return $('#aov').classList.remove('show');
-    if (e.target.id === 'asave') {
-      D.productos.forEach(p => { if (!p.mayorista || !p.mayorista.desde || !p.mayorista.precio) delete p.mayorista; if (p.visible === true) delete p.visible; });
-      try { await setDoc(ref, { json: JSON.stringify(D) }); Object.assign(C, D); paintText(); renderCatalog(); $('#aov').classList.remove('show'); alert('Cambios guardados'); }
-      catch (x) { $('#aer').textContent = 'No se pudo guardar: ' + x.code; }
-      return;
-    }
-    const b = e.target.closest('[data-a]'); if (!b) return;
-    const i = +b.dataset.i, a = b.dataset.a, P = D.productos;
-    if (a === 'add') P.push({ id: 'p' + Date.now(), nombre: 'Nuevo producto', categoria: D.categorias[0] || '', precio: 0, emoji: '🪵', img: '', descripcion: '', opciones: [], personalizable: false });
-    else if (a === 'del') { if (!confirm('¿Eliminar este producto?')) return; P.splice(i, 1); }
-    else { const j = a === 'up' ? i - 1 : i + 1; if (j < 0 || j >= P.length) return; [P[i], P[j]] = [P[j], P[i]]; }
-    draw();
+    const id = S.dataset.id, a = e.target.dataset.a;
+    if (e.target.id === 'ax' || e.target.id === 'aok') { P().forEach(clean); $('#aov').classList.remove('show'); renderCatalog(); }
+    else if (a === 'foto') { const r = await pick(false, 900); if (r) { P()[idx(id)].img = r; editProd(id); } }
+    else if (a === 'foto0') { P()[idx(id)].img = ''; editProd(id); }
   };
-  $('#adm').onclick = () => { D = structuredClone(C); draw(); $('#aov').classList.add('show'); };
+  $('#adm').onclick = () => { EDIT = true; paintText(); renderCatalog(); scrollTo(0, 0); };
+  $('#eset').onclick = ajustes;
+  $('#ecan').onclick = () => { if (confirm('¿Salir sin guardar los cambios?')) location.reload(); };
+  $('#esave').onclick = async () => {
+    P().forEach(clean);
+    try { await setDoc(ref, { json: JSON.stringify(C) }); alert('Cambios guardados'); location.reload(); }
+    catch (x) { alert('No se pudo guardar: ' + x.code); }
+  };
 }
 </script>
 
