@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Toledo Láser</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--g1:#006400;--g2:#4CAF50;--g3:#A5D6A7;--bg:#f3faf3;--ink:#10200f;--card:#fff}
+*{box-sizing:border-box;margin:0}
+body{font-family:'Open Sans',sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+h1,h2,h3,.btn,.chip{font-family:'Montserrat',sans-serif}
+header{background:var(--g1);color:#fff;position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:10px 5vw}
+.logo{font-weight:800;font-size:1.15rem;letter-spacing:.02em;display:flex;align-items:center;gap:10px;font-family:Montserrat}
+.logo small{display:block;font-size:.62rem;letter-spacing:.25em;font-weight:700}
+.cartbtn{background:#fff;color:var(--g1);border:0;border-radius:99px;padding:9px 16px;font:700 .9rem Montserrat;cursor:pointer}
+.hero{background:var(--g1);color:#fff;padding:48px 5vw 56px;position:relative;overflow:hidden}
+.hero h1{font-size:clamp(1.8rem,6vw,3.2rem);font-weight:800;max-width:15em;line-height:1.1}
+.hero p{max-width:34em;margin:14px 0 22px;color:#dff3df}
+.hero::after{content:"";position:absolute;left:0;bottom:22px;height:3px;width:0;background:var(--g3);box-shadow:0 0 12px var(--g3);animation:laser 1.6s ease-out .3s forwards}
+@keyframes laser{to{width:100%}}
+@media(prefers-reduced-motion:reduce){.hero::after{animation:none;width:100%}}
+.btn{background:var(--g2);color:#06240a;border:0;border-radius:8px;padding:12px 20px;font-weight:700;cursor:pointer;font-size:.95rem;text-decoration:none;display:inline-block}
+.btn.dark{background:var(--g1);color:#fff}
+.btn:focus-visible,.chip:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #000;outline-offset:2px}
+main{padding:28px 5vw 60px;max-width:1200px;margin:auto}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px}
+.chip{border:2px solid var(--g1);background:transparent;color:var(--g1);border-radius:99px;padding:7px 16px;font-weight:700;cursor:pointer;white-space:nowrap;font-size:.85rem}
+.chip.on{background:var(--g1);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px;margin-top:20px}
+.card{background:var(--card);border-radius:10px;overflow:hidden;cursor:pointer;border:1px solid #d3ead3;display:flex;flex-direction:column;text-align:left;padding:0;font:inherit;color:inherit}
+.card:hover{border-color:var(--g2)}
+.ph{aspect-ratio:1;background:var(--g3);display:flex;align-items:center;justify-content:center;font-size:3.4rem}
+.ph img{width:100%;height:100%;object-fit:cover}
+.card .t{padding:12px 14px 14px}
+.card h3{font-size:.98rem}
+.price{font-weight:700;color:var(--g1);margin-top:4px}
+.tag{font-size:.75rem;background:var(--g3);border-radius:4px;padding:1px 7px;display:inline-block;margin-top:4px}
+.sold{opacity:.55}
+.info{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:48px}
+.info div{border-left:4px solid var(--g2);padding-left:14px}
+footer{background:var(--g1);color:#dff3df;padding:26px 5vw;font-size:.9rem}
+.ov{position:fixed;inset:0;background:#0008;display:none;z-index:20;align-items:flex-end;justify-content:center}
+.ov.show{display:flex}
+.sheet{background:#fff;width:min(560px,100%);max-height:92vh;overflow:auto;border-radius:16px 16px 0 0;padding:20px;position:relative}
+@media(min-width:700px){.ov{align-items:center}.sheet{border-radius:16px}}
+.x{position:absolute;right:12px;top:10px;border:0;background:none;font-size:1.6rem;cursor:pointer}
+label{display:block;font-weight:600;font-size:.88rem;margin:12px 0 4px}
+input,select,textarea{width:100%;padding:10px;border:1px solid #9bc59b;border-radius:8px;font:inherit}
+.qty{display:flex;align-items:center;gap:10px}
+.qty button{width:34px;height:34px;border-radius:8px;border:1px solid var(--g1);background:#fff;font-size:1.1rem;cursor:pointer}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #e3efe3}
+.tot{font:800 1.15rem Montserrat}
+.note{font-size:.82rem;color:#456}
+.err{color:#b00020;font-size:.85rem;margin-top:6px}
+.cartbtn{font-size:.8rem!important;padding:8px 12px!important}
+.adm details{border:1px solid #bcdcbc;border-radius:8px;padding:8px 10px;margin:8px 0}
+.adm summary{cursor:pointer;font-weight:700}
+.adm .two{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.adm .chk{display:flex;gap:8px;align-items:center}.adm .chk input{width:auto}
+.btn.sm{padding:6px 10px;font-size:.8rem;margin-right:6px}
+</style>
+</head>
+<body>
+<!--
+=====================================================================
+ GUÍA RÁPIDA PARA EDITAR (todo está en el bloque CONFIG, abajo, en el <script>)
+ 1. Cambiar textos: editá "hero", "info" y "pie".
+ 2. Tu WhatsApp: "whatsapp" (con código de país, sin + ni espacios).
+ 3. Categorías: el orden de la lista "categorias" es el orden en la página.
+    Para quitar una, borrala de la lista. Para agregar, escribí un nombre nuevo.
+ 4. Productos: copiá un bloque { ... } de "productos", pegalo y cambiá los datos.
+    - categoria: debe coincidir con un nombre de "categorias".
+    - img: link o nombre de archivo de la foto (ej: "fotos/mate1.jpg"). Si lo dejás vacío se ve el emoji.
+    - opciones: lista de variantes (ej: ["Con bombilla","Sin bombilla"]). Vacía [] si no hay.
+    - personalizable: true muestra el campo "texto o diseño a grabar".
+    - mayorista: {desde: cantidad, precio: precio por unidad} (o borrá la línea).
+    - agotado: true lo marca sin stock. visible: false lo oculta sin borrarlo.
+    El orden de los productos en la lista es el orden en la página.
+ 5. Envío: "zonas" (nombre y costo), "envioGratisDesde" (0 = nunca gratis).
+=====================================================================
+-->
+<header>
+  <div class="logo"><svg width="30" height="30" viewBox="0 0 30 30" fill="#fff" aria-hidden="true"><rect x="3" y="3" width="24" height="6"/><path d="M12 9h6v12l-3 4-3-4z"/><rect x="5" y="27" width="20" height="2"/></svg><span>TOLEDO<small>LÁSER</small></span></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="cartbtn" id="adm" style="display:none">Editar tienda</button><button class="cartbtn" id="login">Ingresar con Google</button><button class="cartbtn" id="openCart">Carrito (<span id="cc">0</span>)</button></div>
+</header>
+<section class="hero">
+  <h1 id="hTitle"></h1>
+  <p id="hText"></p>
+  <a class="btn" href="#catalogo">Ver catálogo</a>
+</section>
+<main id="catalogo">
+  <div class="chips" id="chips" role="tablist"></div>
+  <div class="grid" id="grid"></div>
+  <div class="info" id="info"></div>
+</main>
+<footer id="foot"></footer>
+
+<div class="ov" id="pov"><div class="sheet" id="psheet"></div></div>
+<div class="ov" id="cov"><div class="sheet" id="csheet"></div></div>
+<div class="ov" id="aov"><div class="sheet adm" id="asheet" style="width:min(760px,100%)"></div></div>
+
+<script>
+/* ===================== CONFIG: EDITÁ SOLO ESTA PARTE ===================== */
+const CONFIG = {
+  negocio: "Toledo Láser",
+  whatsapp: "5491100000000",            // tu número con código de país, sin + ni espacios
+  moneda: "$",
+  hero: {
+    titulo: "Grabado y corte láser hecho a tu medida",
+    texto: "Mates de algarrobo, juegos de mesa, carteles y regalos personalizados. Vendemos por menor, por mayor y para empresas."
+  },
+  categorias: ["Mates", "Juegos de mesa", "Juegos interactivos", "Carteles", "Grabados personalizados", "Empresas y mayoristas"],
+  envio: {
+    retiro: "Retiro en el taller (gratis)",
+    zonas: [
+      { nombre: "Local / zona cercana", costo: 2500 },
+      { nombre: "Resto de la provincia", costo: 5000 },
+      { nombre: "Todo el país (correo)", costo: 8500 }
+    ],
+    envioGratisDesde: 60000
+  },
+  info: [
+    { titulo: "Envíos a todo el país", texto: "Calculás el costo de envío antes de enviar tu pedido." },
+    { titulo: "Compras por mayor", texto: "Precios especiales desde cierta cantidad. Escribinos por WhatsApp." },
+    { titulo: "Diseños a pedido", texto: "Logos, nombres y frases grabados en tus productos." }
+  ],
+  pie: "Toledo Láser · Pedidos y consultas por WhatsApp",
+  productos: [
+    { id: "mate-algarrobo", nombre: "Mate de algarrobo", categoria: "Mates", precio: 18000, emoji: "🧉", img: "",
+      descripcion: "Mate de algarrobo curado, listo para usar. Se puede grabar con nombre o diseño.",
+      opciones: ["Con bombilla", "Sin bombilla"], personalizable: true, mayorista: { desde: 10, precio: 14500 } },
+    { id: "set-mate", nombre: "Set matero grabado", categoria: "Mates", precio: 42000, emoji: "🎁", img: "",
+      descripcion: "Mate, bombilla y yerbera de madera con grabado láser.",
+      opciones: [], personalizable: true, mayorista: { desde: 6, precio: 36000 } },
+    { id: "ta-te-ti", nombre: "Ta-Te-Ti de madera", categoria: "Juegos de mesa", precio: 9000, emoji: "⭕", img: "",
+      descripcion: "Juego clásico cortado en láser. Ideal para regalo.",
+      opciones: [], personalizable: false },
+    { id: "puzzle", nombre: "Rompecabezas de madera", categoria: "Juegos interactivos", precio: 12000, emoji: "🧩", img: "",
+      descripcion: "Rompecabezas con tu foto o diseño.",
+      opciones: ["Chico", "Mediano", "Grande"], personalizable: true },
+    { id: "cartel", nombre: "Cartel con nombre", categoria: "Carteles", precio: 15000, emoji: "🪧", img: "",
+      descripcion: "Cartel de madera cortado y grabado a medida para casa o negocio.",
+      opciones: ["30 cm", "50 cm"], personalizable: true, mayorista: { desde: 5, precio: 12500 } },
+    { id: "grabado", nombre: "Grabado en tu objeto", categoria: "Grabados personalizados", precio: 6000, emoji: "✨", img: "",
+      descripcion: "Grabamos logos, nombres o frases en objetos que nos traigas o nos mandes.",
+      opciones: [], personalizable: true }
+  ]
+};
+/* ===== FIREBASE: login con Google y panel de administrador (ver README) ===== */
+const FIREBASE = { apiKey: "AIzaSyDnc_teeaXoQ8MZQgFRHvBwKa6jCz36rWc", authDomain: "tiendatoledolaser.firebaseapp.com", projectId: "tiendatoledolaser", appId: "1:1050909280312:web:f3edff1565870f4821becd" };
+const ADMIN_EMAIL = "matesjt@gmail.com";   // solo este email puede editar la tienda
+const FB_ON = !!FIREBASE.apiKey && !FIREBASE.apiKey.startsWith("PEGAR");
+/* =================== FIN DE CONFIG (no hace falta tocar lo de abajo) =================== */
+
+const C = CONFIG, $ = s => document.querySelector(s);
+const money = n => C.moneda + Number(n).toLocaleString('es-AR');
+let cart = [], cat = "Todas", USER = null;
+try { cart = JSON.parse(localStorage.getItem('tl_cart') || '[]') } catch (e) {}
+const save = () => { try { localStorage.setItem('tl_cart', JSON.stringify(cart)) } catch (e) {} };
+const prod = id => C.productos.find(p => p.id === id);
+const unit = (p, q) => (p.mayorista && q >= p.mayorista.desde) ? p.mayorista.precio : p.precio;
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const img = p => `<div class="ph">${p.img ? `<img src="${esc(p.img)}" alt="${esc(p.nombre)}" loading="lazy">` : esc(p.emoji || '🪵')}</div>`;
+
+function paintText() {
+  document.title = C.negocio;
+  $('#hTitle').textContent = C.hero.titulo;
+  $('#hText').textContent = C.hero.texto;
+  $('#foot').textContent = C.pie;
+  $('#info').innerHTML = C.info.map(i => `<div><h3>${esc(i.titulo)}</h3><p>${esc(i.texto)}</p></div>`).join('');
+}
+
+function renderCatalog() {
+  $('#chips').innerHTML = ["Todas", ...C.categorias].map(c => `<button class="chip ${c === cat ? 'on' : ''}" data-c="${esc(c)}">${esc(c)}</button>`).join('');
+  document.querySelectorAll('.chip').forEach(b => b.onclick = () => { cat = b.dataset.c; renderCatalog() });
+  const list = C.productos.filter(p => p.visible !== false && (cat === "Todas" || p.categoria === cat));
+  $('#grid').innerHTML = list.length ? list.map(p => `<button class="card ${p.agotado ? 'sold' : ''}" data-id="${p.id}">${img(p)}<div class="t"><h3>${esc(p.nombre)}</h3><div class="price">${money(p.precio)}</div>${p.mayorista ? `<span class="tag">Mayorista desde ${p.mayorista.desde} u.</span>` : ''}${p.agotado ? '<span class="tag">Sin stock</span>' : ''}</div></button>`).join('') : '<p>Todavía no hay productos en esta categoría.</p>';
+  document.querySelectorAll('.card').forEach(b => b.onclick = () => openProd(b.dataset.id));
+}
+
+function openProd(id) {
+  const p = prod(id);
+  $('#psheet').innerHTML = `<button class="x" aria-label="Cerrar" id="px">×</button>${img(p)}<h2 style="margin-top:12px">${esc(p.nombre)}</h2><div class="price">${money(p.precio)}</div><p style="margin-top:8px">${esc(p.descripcion)}</p>
+  ${p.mayorista ? `<p class="note">Desde ${p.mayorista.desde} unidades: ${money(p.mayorista.precio)} c/u</p>` : ''}
+  ${p.opciones && p.opciones.length ? `<label for="po">Opción</label><select id="po">${p.opciones.map(o => `<option>${esc(o)}</option>`).join('')}</select>` : ''}
+  ${p.personalizable ? `<label for="pn">Texto o diseño a grabar (opcional)</label><textarea id="pn" rows="2" placeholder="Ej: Nombre, frase, o 'te mando el logo por WhatsApp'"></textarea>` : ''}
+  <label>Cantidad</label><div class="qty"><button id="pm" aria-label="Menos">−</button><strong id="pq">1</strong><button id="pp" aria-label="Más">+</button></div>
+  <button class="btn dark" id="padd" style="width:100%;margin-top:18px" ${p.agotado ? 'disabled' : ''}>${p.agotado ? 'Sin stock' : 'Agregar al carrito'}</button>`;
+  let q = 1; const set = n => { q = Math.max(1, n); $('#pq').textContent = q };
+  $('#pm').onclick = () => set(q - 1); $('#pp').onclick = () => set(q + 1);
+  $('#px').onclick = () => $('#pov').classList.remove('show');
+  $('#padd').onclick = () => {
+    const op = $('#po') ? $('#po').value : '', nt = $('#pn') ? $('#pn').value.trim() : '';
+    const ex = cart.find(i => i.id === id && i.op === op && i.nt === nt);
+    ex ? ex.q += q : cart.push({ id, q, op, nt });
+    save(); updCount(); $('#pov').classList.remove('show'); openCart();
+  };
+  $('#pov').classList.add('show');
+}
+
+const updCount = () => $('#cc').textContent = cart.reduce((a, i) => a + i.q, 0);
+const subtotal = () => cart.reduce((a, i) => a + unit(prod(i.id), i.q) * i.q, 0);
+
+function openCart() {
+  cart = cart.filter(i => prod(i.id));
+  if (!cart.length) {
+    $('#csheet').innerHTML = `<button class="x" aria-label="Cerrar" id="cx">×</button><h2>Tu carrito</h2><p style="margin:14px 0">Todavía no agregaste productos.</p>`;
+    $('#cx').onclick = () => $('#cov').classList.remove('show');
+    $('#cov').classList.add('show'); return;
+  }
+  const items = cart.map((i, k) => { const p = prod(i.id); return `<div class="row"><div><strong>${esc(p.nombre)}</strong><div class="note">${esc(i.op)}${i.nt ? ' · Grabado: ' + esc(i.nt) : ''}<br>${money(unit(p, i.q))} c/u</div></div><div class="qty"><button data-k="${k}" data-d="-1" aria-label="Menos">−</button><strong>${i.q}</strong><button data-k="${k}" data-d="1" aria-label="Más">+</button></div></div>` }).join('');
+  $('#csheet').innerHTML = `<button class="x" aria-label="Cerrar" id="cx">×</button><h2>Tu pedido</h2>${items}
+  <h3 style="margin-top:18px">Tus datos</h3>${FB_ON && !USER ? '<button class="btn" id="cg" style="margin-top:8px">Completar con mi cuenta de Google</button>' : ''}
+  <label for="fn">Nombre y apellido</label><input id="fn" autocomplete="name">
+  <label for="ft">Teléfono</label><input id="ft" type="tel" autocomplete="tel">
+  <label for="fe">Forma de entrega</label><select id="fe"><option value="-1">${esc(C.envio.retiro)}</option>${C.envio.zonas.map((z, k) => `<option value="${k}">${esc(z.nombre)} (${money(z.costo)})</option>`).join('')}</select>
+  <div id="fdir"><label for="fa">Dirección (calle, número, ciudad, CP)</label><input id="fa" autocomplete="street-address"></div>
+  <label for="fo">Comentarios (opcional)</label><textarea id="fo" rows="2"></textarea>
+  <div class="row"><span>Subtotal</span><span id="ts"></span></div><div class="row"><span>Envío</span><span id="te"></span></div><div class="row"><span class="tot">Total</span><span class="tot" id="tt"></span></div>
+  <p class="err" id="er"></p><button class="btn dark" id="send" style="width:100%;margin-top:10px">Enviar pedido por WhatsApp</button>
+  <p class="note" style="margin-top:8px">Se abre WhatsApp con tu pedido listo. El pago lo coordinamos por ahí.</p>`;
+  const ship = () => { const z = +$('#fe').value, s = subtotal(); if (z < 0) return 0; return (C.envio.envioGratisDesde && s >= C.envio.envioGratisDesde) ? 0 : C.envio.zonas[z].costo };
+  const tot = () => { $('#fdir').style.display = +$('#fe').value < 0 ? 'none' : 'block'; $('#ts').textContent = money(subtotal()); $('#te').textContent = ship() ? money(ship()) : 'Gratis'; $('#tt').textContent = money(subtotal() + ship()) };
+  $('#fe').onchange = tot; tot();
+  let cu = {}; try { cu = JSON.parse(localStorage.getItem('tl_cust' + (USER ? USER.uid : '')) || '{}') } catch (e) {}
+  $('#fn').value = cu.n || (USER && USER.displayName) || ''; $('#ft').value = cu.t || ''; $('#fa').value = cu.a || '';
+  if ($('#cg')) $('#cg').onclick = () => $('#login').click();
+  $('#cx').onclick = () => $('#cov').classList.remove('show');
+  document.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { const i = cart[+b.dataset.k]; i.q += +b.dataset.d; if (i.q < 1) cart.splice(+b.dataset.k, 1); save(); updCount(); openCart() });
+  $('#send').onclick = () => {
+    const n = $('#fn').value.trim(), t = $('#ft').value.trim(), a = $('#fa').value.trim(), z = +$('#fe').value;
+    if (!n || !t || (z >= 0 && !a)) { $('#er').textContent = 'Completá nombre, teléfono y dirección para enviar el pedido.'; return }
+    try { localStorage.setItem('tl_cust' + (USER ? USER.uid : ''), JSON.stringify({ n, t, a })) } catch (e) {}
+    const lines = cart.map(i => { const p = prod(i.id); return `• ${i.q} x ${p.nombre}${i.op ? ' (' + i.op + ')' : ''}${i.nt ? ' – Grabado: ' + i.nt : ''} – ${money(unit(p, i.q) * i.q)}` });
+    const msg = `Hola ${C.negocio}! Quiero hacer este pedido:\n\n${lines.join('\n')}\n\nSubtotal: ${money(subtotal())}\nEntrega: ${z < 0 ? C.envio.retiro : C.envio.zonas[z].nombre}\nEnvío: ${ship() ? money(ship()) : 'Gratis'}\n*Total: ${money(subtotal() + ship())}*\n\nNombre: ${n}\nTeléfono: ${t}${USER ? '\nEmail: ' + USER.email : ''}${z >= 0 ? '\nDirección: ' + a : ''}${$('#fo').value.trim() ? '\nComentarios: ' + $('#fo').value.trim() : ''}`;
+    window.open(`https://wa.me/${C.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
+  };
+  $('#cov').classList.add('show');
+}
+$('#openCart').onclick = openCart;
+[['#pov'], ['#cov']].forEach(([s]) => $(s).addEventListener('click', e => { if (e.target.id === s.slice(1)) $(s).classList.remove('show') }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.ov').forEach(o => o.classList.remove('show')) });
+paintText(); renderCatalog(); updCount();
+</script>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,doc,getDoc,setDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+if (!FB_ON) { $('#login').style.display = 'none'; }
+else {
+  const app = initializeApp(FIREBASE), auth = getAuth(app), db = getFirestore(app), ref = doc(db, 'tienda', 'config');
+  onAuthStateChanged(auth, u => {
+    USER = u;
+    $('#login').textContent = u ? 'Salir (' + (u.displayName || 'cuenta').split(' ')[0] + ')' : 'Ingresar con Google';
+    $('#adm').style.display = (u && u.emailVerified && (u.email || '').toLowerCase() === ADMIN_EMAIL.toLowerCase()) ? 'inline-block' : 'none';
+    if ($('#cov').classList.contains('show')) openCart();
+  });
+  $('#login').onclick = () => USER ? signOut(auth) : signInWithPopup(auth, new GoogleAuthProvider()).catch(e => alert('No se pudo ingresar: ' + e.code));
+  try { const s = await getDoc(ref); if (s.exists()) { Object.assign(C, JSON.parse(s.data().json)); paintText(); renderCatalog(); } } catch (e) { console.warn(e); }
+
+  /* ---------- Panel de administración ---------- */
+  const S = $('#asheet'); let D;
+  const get = (o, p) => p.split('.').reduce((a, k) => a == null ? a : a[k], o);
+  const set = (o, p, v) => { const k = p.split('.'), l = k.pop(); k.reduce((a, x) => a[x] ?? (a[x] = {}), o)[l] = v; };
+  const F = (l, p, t = 'text') => {
+    let v = get(D, p);
+    if (t === 'chk') { if (p.endsWith('.visible')) v = v !== false; return `<label class="chk"><input type="checkbox" data-p="${p}" data-t="chk" ${v ? 'checked' : ''}>${l}</label>`; }
+    if (t === 'csv') v = (v || []).join(', ');
+    if (t === 'lines') v = (v || []).join('\n');
+    if (t === 'zonas') v = (v || []).map(z => z.nombre + '|' + z.costo).join('\n');
+    const ta = t === 'area' || t === 'lines' || t === 'zonas';
+    return `<label>${l}</label>` + (ta ? `<textarea rows="${t === 'area' ? 2 : 4}" data-p="${p}" data-t="${t}">${esc(v)}</textarea>` : `<input ${t === 'num' ? 'type="number"' : ''} data-p="${p}" data-t="${t}" value="${esc(v)}">`);
+  };
+  const draw = () => {
+    S.innerHTML = `<button class="x" id="ax" aria-label="Cerrar">×</button><h2>Editar tienda</h2>
+    <h3>Textos generales</h3>${F('Nombre del negocio', 'negocio')}${F('WhatsApp (con código de país, sin +)', 'whatsapp')}${F('Título principal', 'hero.titulo')}${F('Texto principal', 'hero.texto', 'area')}${F('Pie de página', 'pie')}
+    <h3 style="margin-top:18px">Categorías (una por línea; el orden es el de la página)</h3>${F('', 'categorias', 'lines')}
+    <h3 style="margin-top:18px">Envío</h3>${F('Texto de retiro en el taller', 'envio.retiro')}${F('Zonas, una por línea: Nombre|Costo', 'envio.zonas', 'zonas')}${F('Envío gratis desde (0 = nunca)', 'envio.envioGratisDesde', 'num')}
+    <h3 style="margin-top:18px">Productos</h3>` + D.productos.map((p, i) => `<details><summary>${esc(p.emoji || '')} ${esc(p.nombre || 'Producto')}</summary>
+    <div class="two">${F('Nombre', `productos.${i}.nombre`)}${F('Precio', `productos.${i}.precio`, 'num')}</div>
+    <label>Categoría</label><select data-p="productos.${i}.categoria" data-t="text">${D.categorias.map(c => `<option ${c === p.categoria ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
+    ${F('Descripción', `productos.${i}.descripcion`, 'area')}
+    <div class="two">${F('Emoji (si no hay foto)', `productos.${i}.emoji`)}${F('Foto (link o ruta, ej: fotos/mate.jpg)', `productos.${i}.img`)}</div>
+    ${F('Opciones separadas por coma', `productos.${i}.opciones`, 'csv')}
+    <div class="two">${F('Mayorista desde (unidades)', `productos.${i}.mayorista.desde`, 'num')}${F('Precio mayorista c/u', `productos.${i}.mayorista.precio`, 'num')}</div>
+    ${F('Permite texto a grabar', `productos.${i}.personalizable`, 'chk')}${F('Sin stock', `productos.${i}.agotado`, 'chk')}${F('Visible en la tienda', `productos.${i}.visible`, 'chk')}
+    <p style="margin-top:10px"><button class="btn sm" data-a="up" data-i="${i}">Subir</button><button class="btn sm" data-a="dn" data-i="${i}">Bajar</button><button class="btn sm" data-a="del" data-i="${i}">Eliminar</button></p></details>`).join('') + `
+    <p style="margin-top:12px"><button class="btn sm" data-a="add">+ Agregar producto</button></p><p class="err" id="aer"></p><button class="btn dark" id="asave" style="width:100%;margin-top:10px">Guardar cambios</button>`;
+  };
+  S.onchange = e => {
+    const el = e.target, p = el.dataset.p, t = el.dataset.t; if (!p) return; let v = el.value;
+    if (t === 'chk') v = el.checked;
+    else if (t === 'num') v = v === '' ? '' : +v;
+    else if (t === 'csv') v = v.split(',').map(s => s.trim()).filter(Boolean);
+    else if (t === 'lines') v = v.split('\n').map(s => s.trim()).filter(Boolean);
+    else if (t === 'zonas') v = v.split('\n').map(l => l.split('|')).filter(a => a[0].trim()).map(a => ({ nombre: a[0].trim(), costo: +a[1] || 0 }));
+    set(D, p, v);
+  };
+  S.onclick = async e => {
+    if (e.target.id === 'ax') return $('#aov').classList.remove('show');
+    if (e.target.id === 'asave') {
+      D.productos.forEach(p => { if (!p.mayorista || !p.mayorista.desde || !p.mayorista.precio) delete p.mayorista; if (p.visible === true) delete p.visible; });
+      try { await setDoc(ref, { json: JSON.stringify(D) }); Object.assign(C, D); paintText(); renderCatalog(); $('#aov').classList.remove('show'); alert('Cambios guardados'); }
+      catch (x) { $('#aer').textContent = 'No se pudo guardar: ' + x.code; }
+      return;
+    }
+    const b = e.target.closest('[data-a]'); if (!b) return;
+    const i = +b.dataset.i, a = b.dataset.a, P = D.productos;
+    if (a === 'add') P.push({ id: 'p' + Date.now(), nombre: 'Nuevo producto', categoria: D.categorias[0] || '', precio: 0, emoji: '🪵', img: '', descripcion: '', opciones: [], personalizable: false });
+    else if (a === 'del') { if (!confirm('¿Eliminar este producto?')) return; P.splice(i, 1); }
+    else { const j = a === 'up' ? i - 1 : i + 1; if (j < 0 || j >= P.length) return; [P[i], P[j]] = [P[j], P[i]]; }
+    draw();
+  };
+  $('#adm').onclick = () => { D = structuredClone(C); draw(); $('#aov').classList.add('show'); };
+}
+</script>
+
+</body>
+</html>
